@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.joshuamsingh.producto.customermap">
+
+
+    <fragment
+        android:id="@+id/mapfragment"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/e1"
+        android:text="search"
+        android:id="@+id/b1" />
+    <NumberPicker
+        android:id="@+id/np"
+        android:layout_width="wrap_content"
+        android:layout_height="75dp"
+        android:layout_marginStart="23dp"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/b1"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:id="@+id/e1"
+        android:layout_width="150dp"
+        android:layout_below="@+id/mapfragment"
+        android:layout_height="40dp"
+        android:hint="enter the product" />
+
+    <Button
+        android:id="@+id/b2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="current"
+        android:layout_alignBaseline="@+id/e1"
+        android:layout_alignBottom="@+id/e1"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="66dp" />
+    <ListView
+        android:layout_width="250dp"
+        android:layout_height="200dp"
+        android:layout_alignTop="@+id/np"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/l1"/>
+
+
+</RelativeLayout>

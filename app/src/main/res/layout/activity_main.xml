@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.joshuamsingh.producto.MainActivity">
+    <EditText
+        android:layout_width="368dp"
+        android:layout_height="100dp"
+
+        android:id="@+id/t2"/>
+    <EditText
+        android:layout_width="368dp"
+        android:layout_height="100dp"
+        android:layout_below="@+id/t2"
+        android:id="@+id/t1"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/t1"
+        android:id="@+id/b1"
+        android:text="add"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/b1"
+        android:id="@+id/b2"
+        android:text="remove"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/b2"
+        android:id="@+id/e1"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/e1"
+        android:id="@+id/b3"
+        android:text="sign in"/>
+
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/b3"
+        android:id="@+id/b4"
+        android:text="register"/>
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/b4"
+        android:orientation="vertical"
+
+        >
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:text="seller"
+            android:id="@+id/r1"
+            />
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:text="customer"
+            android:id="@+id/r2"
+            />
+
+
+
+
+    </RadioGroup>
+
+
+</RelativeLayout>
