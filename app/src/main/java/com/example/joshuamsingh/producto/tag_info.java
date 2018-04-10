@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import static java.util.Locale.PRC;
 import static java.util.Locale.getDefault;
 
 public class tag_info extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -160,7 +161,18 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
           }
         }
     });
+        autocomplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if(adapterView.getItemAtPosition(i).toString().equals("soap")){
+                    e2.setSelection(3);
+                }
+            }
+        });
+
     }
+
+
 
 
     @Override

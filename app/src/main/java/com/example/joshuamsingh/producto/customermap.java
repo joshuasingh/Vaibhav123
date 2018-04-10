@@ -113,7 +113,6 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
         double lat = address.getLatitude();
         double lng = address.getLongitude();
         gotolocation(lat, lng, 15);
-
     }
 
 
