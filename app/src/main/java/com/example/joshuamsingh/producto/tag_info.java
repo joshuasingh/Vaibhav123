@@ -161,6 +161,9 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
           }
         }
     });
+
+       //jasonnnnnn look here
+
         autocomplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
