@@ -161,17 +161,6 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
           }
         }
     });
-
-
-        autocomplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(adapterView.getItemAtPosition(i).toString().equals("soap")){
-                    e2.setSelection(3);
-                }
-            }
-        });
-
     }
 
 
