@@ -32,5 +32,11 @@
        android:text="logout"
        android:id="@+id/b4"
        android:layout_below="@+id/b3"/>
+   <Button
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:text="message"
+       android:id="@+id/b5"
+       android:layout_below="@+id/b4"/>
 
 </RelativeLayout>

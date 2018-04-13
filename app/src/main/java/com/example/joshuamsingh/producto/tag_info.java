@@ -23,6 +23,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -136,12 +137,15 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
               ref2.setValue(t1);
               DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("uid");
               ref3.setValue(uid);
+              DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("token");
+              ref4.setValue(FirebaseInstanceId.getInstance().getToken());
 
 
 
 
 
-            //put the personal info
+
+              //put the personal info
             Toast.makeText(tag_info.this,state,Toast.LENGTH_LONG).show();
             DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("customer").child(uid);
             GeoFire geofire11 = new GeoFire(ref11);
