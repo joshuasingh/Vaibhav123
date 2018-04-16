@@ -5,8 +5,10 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,6 +22,7 @@ import android.widget.Toast;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -35,7 +38,7 @@ import java.util.UUID;
 import static java.util.Locale.PRC;
 import static java.util.Locale.getDefault;
 
-public class tag_info extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class tag_info extends AppCompatActivity implements AdapterView.OnItemSelectedListener,OnFailureListener {
 
     private Button b1;
     private EditText e1;
@@ -55,9 +58,16 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tag_info);
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
+                myHandaling(paramThread, paramThrowable);
+            }
+        });
+
 
         calendar=Calendar.getInstance();
          currentDate= DateFormat.getDateInstance(DateFormat.FULL).format(calendar.getTime());
@@ -86,88 +96,95 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
 
 
 
-    b1.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
+            b1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
 
 
-
-            double latitude = Double.parseDouble(lat);
-            double longitude = Double.parseDouble(lng);
-            String lat = Double.toString(latitude);
-            String lng = Double.toString(longitude);
-
+                    double latitude = Double.parseDouble(lat);
+                    double longitude = Double.parseDouble(lng);
+                    String lat = Double.toString(latitude);
+                    String lng = Double.toString(longitude);
 
 
+                    try {
+                        Geocoder geocoder = new Geocoder(tag_info.this, Locale.getDefault());
+                        addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    try{
+                    String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+                    String city = addresses.get(0).getLocality();
+                    String state = addresses.get(0).getAdminArea();
+                    String country = addresses.get(0).getCountryName();
+                    String postalCode = addresses.get(0).getPostalCode();
+                    String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
 
 
-            try {
-                Geocoder geocoder = new Geocoder(tag_info.this, Locale.getDefault());
-                addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                    String uniqueID = UUID.randomUUID().toString();
 
-    String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-    String city = addresses.get(0).getLocality();
-    String state = addresses.get(0).getAdminArea();
-    String country = addresses.get(0).getCountryName();
-    String postalCode = addresses.get(0).getPostalCode();
-    String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
-    Toast.makeText(tag_info.this, "dfsdfsdf", Toast.LENGTH_LONG).show();
+                    LatLng l1 = new LatLng(latitude, longitude);
+                    String t = l1.toString().trim();
+                    String t1 = autocomplete.getText().toString();//product
+                    category = e2.getSelectedItem().toString();//category
 
-            String uniqueID = UUID.randomUUID().toString();
+                    //put the global list
+                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    Toast.makeText(tag_info.this, country, Toast.LENGTH_SHORT).show();
 
-            LatLng l1 = new LatLng(latitude,longitude);
-            String t = l1.toString().trim();
-            String t1 = autocomplete.getText().toString();//product
-            category=e2.getSelectedItem().toString();//category
-
-            //put the global list
-            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            Toast.makeText(tag_info.this,country, Toast.LENGTH_SHORT).show();
-
-          if(state!=null) {
-              DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state);
-              GeoFire geofire = new GeoFire(ref);
-              geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
-              DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("category");
-              ref1.setValue(category);
-              DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("product");
-              ref2.setValue(t1);
-              DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("uid");
-              ref3.setValue(uid);
-              DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("token");
-              ref4.setValue(FirebaseInstanceId.getInstance().getToken());
+                    if (state != null) {
+                        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state);
+                        GeoFire geofire = new GeoFire(ref);
+                        geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
+                        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("category");
+                        ref1.setValue(category);
+                        DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("product");
+                        ref2.setValue(t1);
+                        DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("uid");
+                        ref3.setValue(uid);
+                        DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("token");
+                        ref4.setValue(FirebaseInstanceId.getInstance().getToken());
 
 
+                        //put the personal info
+
+                        DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("customer").child(uid);
+                        GeoFire geofire11 = new GeoFire(ref11);
+                        geofire11.setLocation(uniqueID, new GeoLocation(latitude, longitude));
+                        DatabaseReference ref12 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("category");
+                        ref12.setValue(category);
+                        DatabaseReference ref13 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("product");
+                        ref13.setValue(t1);
+                        DatabaseReference ref14 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("date");
+                        ref14.setValue(currentDate);
 
 
+                        finish();
+                    } else {
+                        Toast.makeText(tag_info.this, "unable get your location", Toast.LENGTH_LONG).show();
+
+                    }
+                    }
+                    catch (Exception e) {
+                        Log.e("Alert","Try n catch:::");
+                        Toast.makeText(tag_info.this, "some problem occured try again ",Toast.LENGTH_LONG).show();
 
 
-              //put the personal info
-            Toast.makeText(tag_info.this,state,Toast.LENGTH_LONG).show();
-            DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("customer").child(uid);
-            GeoFire geofire11 = new GeoFire(ref11);
-            geofire11.setLocation(uniqueID, new GeoLocation(latitude, longitude));
-            DatabaseReference ref12 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("category");
-            ref12.setValue(category);
-            DatabaseReference ref13 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("product");
-            ref13.setValue(t1);
-            DatabaseReference ref14= FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("date");
-            ref14.setValue(currentDate);
+                    }
 
-            finish();
-          }
-          else{
-              Toast.makeText(tag_info.this,"unable get your location",Toast.LENGTH_LONG).show();
+                }
+            });
 
-          }
-        }
-    });
     }
 
+    public void myHandaling(Thread paramThread, Throwable paramThrowable){
+        Log.e("Alert","Lets See if it Works !!!" +"paramThread:::" +paramThread +"paramThrowable:::" +paramThrowable);
+        Toast.makeText(tag_info.this, "Alert uncaughtException111",Toast.LENGTH_LONG).show();
+      startActivity(new Intent(this,tag_info.class));
 
+    }
 
 
     @Override
@@ -178,5 +195,10 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
 
+    }
+
+    @Override
+    public void onFailure(@NonNull Exception e) {
+        Toast.makeText(this,"some problem occured",Toast.LENGTH_LONG).show();
     }
 }

@@ -44,6 +44,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.R.id.list;
+
 public class store_info extends AppCompatActivity {
     EditText e1;
     Spinner s1;
@@ -61,6 +63,8 @@ public class store_info extends AppCompatActivity {
     String state,country;
     Button b2;
     APIService mservice;
+    int checklist=0;
+    LatLng l1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,16 +115,18 @@ public class store_info extends AppCompatActivity {
        b2.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View view) {
-               arrayAdapter =
-                       new ArrayAdapter<String>(store_info.this,android.R.layout.simple_list_item_1,tokenlist);
-               mlist.setAdapter(arrayAdapter);
-                mess();
+
+               mess();
            }
        });
 
-
-
-
+       mlist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+           @Override
+           public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+              cat.remove(i);
+               arrayAdapter.notifyDataSetChanged();
+           }
+       });
 
         ArrayAdapter<String> myadapter=new ArrayAdapter<String>(store_info.this,android
                 .R.layout.simple_list_item_1,getResources().getStringArray(R.array.category));
@@ -133,13 +139,15 @@ public class store_info extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
 
+                   if(s1.getSelectedItem().toString().equals("---- Nothing Selected ----")){
 
-
-                cat.add(s1.getSelectedItem().toString());
-                 arrayAdapter =
-                        new ArrayAdapter<String>(store_info.this,android.R.layout.simple_list_item_1,cat);
-                mlist.setAdapter(arrayAdapter);
-
+                }
+                 else {
+                       cat.add(s1.getSelectedItem().toString());
+                       arrayAdapter =
+                               new ArrayAdapter<String>(store_info.this, android.R.layout.simple_list_item_1, cat);
+                       mlist.setAdapter(arrayAdapter);
+                   }
 
 
 
@@ -181,8 +189,7 @@ public class store_info extends AppCompatActivity {
 
 
                String uniqueID = UUID.randomUUID().toString();
-
-               LatLng l1 = new LatLng(latitude,longitude);
+               l1 = new LatLng(latitude,longitude);
                String t = l1.toString().trim();
               t1 =e1.getText().toString();//store name
 
@@ -191,7 +198,7 @@ public class store_info extends AppCompatActivity {
                String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
 
-               if(state!=null && !TextUtils.isEmpty(t1)) {
+               if(state!=null && !TextUtils.isEmpty(t1) && (cat.size()!=0)) {
                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state);
                    GeoFire geofire = new GeoFire(ref);
                    geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
@@ -242,8 +249,17 @@ public class store_info extends AppCompatActivity {
     }
 
     private void mess() {
+        double lat1=l1.latitude;
+        String lat2 = Double.toString(lat1);
+
+        double long1=l1.longitude;
+        String long2 = Double.toString(long1);
+
+        String go=long2.concat(",").concat(lat2);
+
+        Toast.makeText(this,go,Toast.LENGTH_LONG).show();
         for (int i=0; i < tokenlist.size(); i++) {
-            Notification notification = new Notification(t1+"opened in your vicinity and provides your demanded product", "dfsdfd");
+            Notification notification = new Notification(t1+" opened in your vicinity and provides your demanded product",go );
             Sender sender = new Sender(tokenlist.get(i), notification);
             mservice.sendNotification(sender)
                     .enqueue(new Callback<MyResponse>() {
@@ -252,7 +268,7 @@ public class store_info extends AppCompatActivity {
                             if (response.body().success == 1) {
                                 Toast.makeText(store_info.this, "success", Toast.LENGTH_LONG).show();
                             } else {
-                                Toast.makeText(store_info.this, "failure", Toast.LENGTH_LONG).show();
+                              //  Toast.makeText(store_info.this, "failure", Toast.LENGTH_LONG).show();
                             }
                         }
 
@@ -305,7 +321,6 @@ public class store_info extends AppCompatActivity {
                           if (name.equals(cat.get(i))) {
                               String tok = ds.child(country).child(state).child(key).child("token").getValue(String.class);
                               tokenlist.add(tok);
-                              Toast.makeText(store_info.this,name,Toast.LENGTH_LONG).show();
 
 
 

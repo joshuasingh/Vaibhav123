@@ -45,6 +45,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -64,6 +65,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
 
     GoogleMap mgooglemap;
     Location mLastlocation, location;
+    LatLng curloc;
     GoogleApiClient mGoogleApiClient;
     private Button b1,b2,gt,p;
     private EditText e1;
@@ -100,7 +102,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
             a1=new arraypasser();
             b1 = (Button) findViewById(R.id.b1);
              b = findViewById(R.id.b1);
-            b.setVisibility(View.INVISIBLE);
+
             e1 = (EditText) findViewById(R.id.e1);
             frequency=new int[30];
 
@@ -142,7 +144,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 currentlocation();
-                b.setVisibility(View.VISIBLE);
+
             }
         });
 
@@ -153,7 +155,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
             np = (NumberPicker) findViewById(R.id.np);
 
 
-            np.setMinValue(0);
+            np.setMinValue(1);
             //Specify the maximum value/number of NumberPicker
             np.setMaxValue(10);
 
@@ -165,8 +167,14 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
                 @Override
                 public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                     //Display the newly selected number from picker
-                    circle.setRadius(newVal * 1000);
-                    radius = newVal;
+                   try {
+                       circle.setRadius(newVal * 1000);
+                       radius = newVal;
+                   }catch (Exception e) {
+                        Toast.makeText(represented.this,"point of center not selected",Toast.LENGTH_LONG).show();
+
+
+                    }
                 }
             });
 
@@ -196,67 +204,67 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
 
 
     private void getproduct(){
+          try {
+              try {
+                  Geocoder geocoder = new Geocoder(represented.this, Locale.getDefault());
+                  addresses = geocoder.getFromLocation(mLastlocation.getLatitude(), mLastlocation.getLongitude(), 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
+              } catch (IOException e) {
+                  e.printStackTrace();
+              }
 
-        try {
-            Geocoder geocoder = new Geocoder(represented.this, Locale.getDefault());
-            addresses = geocoder.getFromLocation(mLastlocation.getLatitude(),mLastlocation.getLongitude(), 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+              String state = addresses.get(0).getAdminArea();
+              String country = addresses.get(0).getCountryName();
+              String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+              DatabaseReference ref = FirebaseDatabase.getInstance().
+                      getReference().child("global demanded items").
+                      child(country).child(state);
+              GeoFire geofire = new GeoFire(ref);
+              GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(curloc.latitude, curloc.longitude), radius);
+              geoQuery.removeAllListeners();
 
-        String state = addresses.get(0).getAdminArea();
-        String country = addresses.get(0).getCountryName();
-        String uid= FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference ref= FirebaseDatabase.getInstance().
-                getReference().child("global demanded items").
-                child(country).child(state);
-        GeoFire geofire=new GeoFire(ref);
-        GeoQuery geoQuery=geofire.queryAtLocation(new GeoLocation(mLastlocation.getLatitude(),mLastlocation.getLongitude()),radius);
-        geoQuery.removeAllListeners();
-
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-
-
+              geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
 
 
-            @Override//when the product is found
-            public void onKeyEntered(String key, GeoLocation location) {
+                  @Override//when the product is found
+                  public void onKeyEntered(String key, GeoLocation location) {
 
 
-                iden.add(key);
-                MarkerOptions opt = new MarkerOptions().position(new LatLng(location.latitude, location.longitude));
-                mgooglemap.addMarker(opt);
+                      iden.add(key);
+                      MarkerOptions opt = new MarkerOptions().position(new LatLng(location.latitude, location.longitude));
+                      mgooglemap.addMarker(opt);
 
-            }
+                  }
 
-            @Override
-            public void onKeyExited(String key) {
-
-
-
-            }
-
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-
-            }
-
-            @Override//when all has been searched for a radius
-            public void onGeoQueryReady() {
-                //if(!productfound) {
-                // radius++;
-                //getproduct();
-                //}
-
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
-        });
+                  @Override
+                  public void onKeyExited(String key) {
 
 
+                  }
+
+                  @Override
+                  public void onKeyMoved(String key, GeoLocation location) {
+
+                  }
+
+                  @Override//when all has been searched for a radius
+                  public void onGeoQueryReady() {
+                      //if(!productfound) {
+                      // radius++;
+                      //getproduct();
+                      //}
+
+                  }
+
+                  @Override
+                  public void onGeoQueryError(DatabaseError error) {
+
+                  }
+              });
+
+          }
+          catch (Exception e){
+              Toast.makeText(this,"failure, try again",Toast.LENGTH_LONG).show();
+          }
 
     }
 
@@ -281,6 +289,33 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
             String y = product_name[i];
             frequency[i] = Collections.frequency(category, y);
         }
+
+      /*  int n=frequency.length;
+
+        for (int i=0 ; i<n-1; i++)
+        {
+            for (int d = 0 ; d < n - i - 1; d++)
+            {
+                if (frequency[d] > frequency[d+1])
+                {
+                    int swap       = frequency[d];
+                    frequency[d]   = frequency[d+1];
+                    frequency[d+1] = swap;
+
+                    //
+                    String swap1       = product_name[d];
+                    product_name[d]   = product_name[d+1];
+                   product_name[d+1] = swap1;
+                }
+            }
+        }*/
+
+
+
+
+
+
+
 
 
         setupchart();
@@ -376,9 +411,37 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
+        mgooglemap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
+
+
+
+            //setting up main center point
+            @Override
+            public void onMapClick(LatLng point) {
+                // TODO Auto-generated method stub
+
+                curloc=point;
+                if(locationpicked_marker!=null){
+                    locationpicked_marker.remove();
+                }
+                if(circle!=null){
+                    circle.remove();
+                }
+                MarkerOptions opt = new MarkerOptions().position(new LatLng(point.latitude,point.longitude));
+                locationpicked_marker=mgooglemap.addMarker(opt);
+                circle=drawcircle(point.latitude,point.longitude);
+
+
+
+
+
+            }
+        });
 
     }
+
+    Marker locationpicked_marker;
 
 
     //display menu
@@ -421,7 +484,6 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
         LatLng latlng = new LatLng(lat, lng);
         mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
         mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(zoom));
-        putmarker(lat, lng);
     }
 
     public void putmarker(double lat, double lng) {
@@ -435,11 +497,9 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     public void currentlocation() {
         if(mLastlocation!=null) {
             gotolocation(mLastlocation.getLatitude(), mLastlocation.getLongitude(), 15);
-            putmarker(mLastlocation.getLatitude(), mLastlocation.getLongitude());
-            circle=drawcircle(mLastlocation.getLatitude(),mLastlocation.getLongitude());
         }
         else{
-            Toast.makeText(this,"searching click one more time",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,"location not found,Please click again",Toast.LENGTH_LONG).show();
 
         }
 

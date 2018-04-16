@@ -171,6 +171,7 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
         mgooglemap.setMyLocationEnabled(true);
 
 
+
         mGoogleApiClient = new GoogleApiClient.Builder(this).
                 addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
@@ -254,7 +255,7 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
         LatLng latlng = new LatLng(lat, lng);
         mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
         mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(zoom));
-        putmarker(lat, lng);
+
     }
 
     public void putmarker(double lat, double lng) {
@@ -268,11 +269,9 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
     public void currentlocation() {
         if(mLastlocation!=null) {
             gotolocation(mLastlocation.getLatitude(), mLastlocation.getLongitude(), 15);
-            putmarker(mLastlocation.getLatitude(), mLastlocation.getLongitude());
-            circle=drawcircle(mLastlocation.getLatitude(),mLastlocation.getLongitude());
         }
         else{
-            Toast.makeText(this,"searching click one more time",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,"location not found,Please click again",Toast.LENGTH_LONG).show();
 
         }
 
@@ -296,6 +295,10 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onLocationChanged(Location location) {
         mLastlocation =location;
+        if(mLastlocation!=null && i==0){
+            i=1;
+            gotolocation(mLastlocation.getLatitude(),mLastlocation.getLongitude(),15);
+        }
 
     }
 

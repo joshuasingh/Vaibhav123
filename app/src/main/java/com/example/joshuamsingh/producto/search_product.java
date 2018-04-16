@@ -14,8 +14,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Layout;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.SeekBar;
@@ -63,7 +68,8 @@ import java.util.Locale;
 
 public class search_product extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     GoogleMap mgooglemap;
-    Location mLastlocation, location;
+    Location mLastlocation;
+    LatLng locationpicked;
     GoogleApiClient mGoogleApiClient;
     private Button b1,b2;
     private EditText e1;
@@ -83,9 +89,13 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
     ArrayList<String> ar;
     ArrayList<LatLng> loc;
     int flag=0;
-    ArrayAdapter<LatLng> arrayAdapter;
+    ArrayAdapter<String> arrayAdapter;
     ListView mlist;
     ArrayList<Marker> m;
+    private LinearLayout layoutListView;
+    private LinearLayout.LayoutParams lpListView;
+    double latitude1,longitude1;
+    String s1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +104,20 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
         if (googleapiavail()) {
             Toast.makeText(this, "working fine", Toast.LENGTH_LONG).show();
             setContentView(R.layout.activity_search_product);
+            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
+                    myHandaling(paramThread, paramThrowable);
+                }
+            });
+
             initmap();
+           /* layoutListView = (LinearLayout) findViewById(R.id.lay1);
+
+            lpListView = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT);
+
+            lpListView.weight = 20;*/
+
             name = new String[20];
             b1 = (Button) findViewById(R.id.b1);
             e1 = (EditText) findViewById(R.id.e1);
@@ -103,12 +126,7 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
             loc=new ArrayList<>();
             m=new ArrayList<>();
             mlist=(ListView) findViewById(R.id.l1);
-        /* b1.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 currentlocation();
-             }
-         });*/
+
 
 
         } else {
@@ -132,9 +150,12 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
 
                 product = e1.getText().toString();
 
-
-                getproduct();
-
+                if(TextUtils.isEmpty(product)){
+                    Toast.makeText(search_product.this,"enter a category you want to search for",Toast.LENGTH_LONG).show();
+                }
+               else {
+                    getproduct();
+                }
 
             }
         });
@@ -158,23 +179,32 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
 
 
 
-        np.setMinValue(0);
+        np.setMinValue(1);
         //Specify the maximum value/number of NumberPicker
         np.setMaxValue(10);
 
         //Gets whether the selector wheel wraps when reaching the min/max value.
         np.setWrapSelectorWheel(true);
 
-        //Set a value change listener for NumberPicker
-        np.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal){
-                //Display the newly selected number from picker
 
-                circle.setRadius(newVal*1000);
-                radius=newVal;
-            }
-        });
+            //Set a value change listener for NumberPicker
+            np.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+                @Override
+                public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                    //Display the newly selected number from picker
+                    try{
+                    circle.setRadius(newVal * 1000);
+                    radius = newVal;}
+                    catch (Exception e) {
+                        Toast.makeText(search_product.this,"point of center not selected",Toast.LENGTH_LONG).show();
+
+
+                    }
+
+                }
+            });
+
+
 
         DatabaseReference ref45= FirebaseDatabase.getInstance().getReference().child("global store info");
 
@@ -200,12 +230,40 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
                         m.get(k).remove();
                     }
                 }
+                if(m1!=null){
+                    m1.remove();
+                }
 
                 LatLng l1=loc.get(i);
-                gotolocation(l1.latitude,l1.longitude,22);
+                gotolocation(l1.latitude,l1.longitude,16);
+                MarkerOptions opt = new MarkerOptions().title(ar.get(i)).position(new LatLng(l1.latitude,l1.longitude));
+                m1=mgooglemap.addMarker(opt);
             }
         });
+        String s=getIntent().getExtras().getString("body");
+        s1=getIntent().getExtras().getString("notify");
 
+        String[] latLng = s.split(",");
+             latitude1 = Double.parseDouble(latLng[0]);
+             longitude1 = Double.parseDouble(latLng[1]);
+
+
+
+
+
+
+    }
+
+
+    Marker m1;
+
+    public void myHandaling(Thread paramThread, Throwable paramThrowable){
+        Log.e("Alert","Lets See if it Works !!!" +"paramThread:::" +paramThread +"paramThrowable:::" +paramThrowable);
+        Toast.makeText(search_product.this, "Alert uncaughtException111",Toast.LENGTH_LONG).show();
+        Intent in =new Intent(search_product.this,search_product.class);
+        startActivity(in);
+        finish();
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
 
@@ -217,93 +275,131 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
 
 
 
-    private void getproduct(){
+        private void getproduct(){
+         try {
+             try {
+                 Geocoder geocoder = new Geocoder(search_product.this, Locale.getDefault());
+                 addresses = geocoder.getFromLocation(mLastlocation.getLatitude(), mLastlocation.getLongitude(), 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
+             } catch (IOException e) {
+                 e.printStackTrace();
+             }
 
-        try {
-            Geocoder geocoder = new Geocoder(search_product.this, Locale.getDefault());
-            addresses = geocoder.getFromLocation(mLastlocation.getLatitude(),mLastlocation.getLongitude(), 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-        String city = addresses.get(0).getLocality();
-         state = addresses.get(0).getAdminArea();
-         country = addresses.get(0).getCountryName();
-        String postalCode = addresses.get(0).getPostalCode();
-        String knownName = addresses.get(0).getFeatureName();
-
-
-
-        String uid= FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference ref= FirebaseDatabase.getInstance().getReference().child("global store info").child(country).child(state);
-        GeoFire geofire=new GeoFire(ref);
-        GeoQuery geoQuery=geofire.queryAtLocation(new GeoLocation(mLastlocation.getLatitude(),mLastlocation.getLongitude()),radius);
-        geoQuery.removeAllListeners();
-
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+             String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+             String city = addresses.get(0).getLocality();
+             state = addresses.get(0).getAdminArea();
+             country = addresses.get(0).getCountryName();
+             String postalCode = addresses.get(0).getPostalCode();
+             String knownName = addresses.get(0).getFeatureName();
 
 
+             //clear listview and marker
+              if(arrayAdapter!=null) {
+                  arrayAdapter.clear();
+                  arrayAdapter.notifyDataSetChanged();
+              }
 
+             if(m.size()!=0){
+                 int y=m.size();
+                 if(y!=0){
+                     for(int k=0;k<y;k++){
+                         m.get(k).remove();
+                     }
+                 }
 
-            @Override//when the product is found
-            public void onKeyEntered(String key, GeoLocation location) {
-
-                for (DataSnapshot datasnap : ds.child(country).child(state).child(key).child("category list").getChildren()) {
-
-                    String name = datasnap.child("category").getValue(String.class);
-                    Toast.makeText(search_product.this, name, Toast.LENGTH_SHORT).show();
-
-                    if (name.equals(product)) {
-                        String nam=ds.child(country).child(state).child(key).child("store_name").getValue(String.class);
-                        double lat = ds.child(country).child(state).child(key).child("l").child("0").getValue(double.class);
-                        double lng =ds.child(country).child(state).child(key).child("l").child("1").getValue(double.class);
-                        LatLng l1=new LatLng(lat,lng);
-
-
-                        ar.add(nam);
-                        loc.add(l1);
-                        MarkerOptions opt = new MarkerOptions().position(new LatLng(location.latitude, location.longitude));
-                       m.add(mgooglemap.addMarker(opt));
-
-                    }
-                }
-            }
-            @Override
-            public void onKeyExited(String key) {
+             }
 
 
 
-            }
 
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
+             String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+             DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("global store info").child(country).child(state);
+             GeoFire geofire = new GeoFire(ref);
+             GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(mLastlocation.getLatitude(), mLastlocation.getLongitude()), radius);
+             geoQuery.removeAllListeners();
 
-            }
-
-            @Override//when all has been searched for a radius
-            public void onGeoQueryReady() {
-                //if(!productfound) {
-                // radius++;
-
-                //}
-               flag=1;
-                listgenerate();
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
-        });
+             geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
 
 
+                 @Override//when the product is found
+                 public void onKeyEntered(String key, GeoLocation location) {
+
+                     for (DataSnapshot datasnap : ds.child(country).child(state).child(key).child("category list").getChildren()) {
+
+                         String name = datasnap.child("category").getValue(String.class);
+
+
+
+                         if (name.equals(product)) {
+                             String nam = ds.child(country).child(state).child(key).child("store_name").getValue(String.class);
+                             double lat = ds.child(country).child(state).child(key).child("l").child("0").getValue(double.class);
+                             double lng = ds.child(country).child(state).child(key).child("l").child("1").getValue(double.class);
+                             LatLng l1 = new LatLng(lat, lng);
+
+
+                             ar.add(nam);
+                             loc.add(l1);
+                             MarkerOptions opt = new MarkerOptions().position(new LatLng(location.latitude, location.longitude));
+                             m.add(mgooglemap.addMarker(opt));
+
+
+                         }
+                     }
+                 }
+
+                 @Override
+                 public void onKeyExited(String key) {
+
+
+                 }
+
+                 @Override
+                 public void onKeyMoved(String key, GeoLocation location) {
+
+                 }
+
+                 @Override//when all has been searched for a radius
+                 public void onGeoQueryReady() {
+                     //if(!productfound) {
+                     // radius++;
+
+                     //}
+                     flag = 1;
+                     listgenerate();
+                 }
+
+                 @Override
+                 public void onGeoQueryError(DatabaseError error) {
+
+                 }
+             });
+         } catch (Exception e){
+             Toast.makeText(search_product.this,"product not found",Toast.LENGTH_LONG).show();
+         }
 
     }
+
 
     private void listgenerate() {
+      /*  if (lpListView.weight == 0) {
+
+
+
+            lpListView.weight = 20;
+
+
+
+
+        } else {
+
+            lpListView.weight = 0;
+
+
+        }
+
+        layoutListView.setLayoutParams(lpListView);*/
+
         arrayAdapter =
-                new ArrayAdapter<LatLng>(search_product.this,android.R.layout.simple_list_item_1,loc);
+                new ArrayAdapter<String>(search_product.this,android.R.layout.simple_list_item_1,ar);
         mlist.setAdapter(arrayAdapter);
 
     }
@@ -313,69 +409,6 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
 
 
 
-   /* private void searchlist(DatabaseReference r1) {
-        FirebaseRecyclerAdapter<searchclass,search_product.UserViewHolder> firebaseRecycleradapter=new
-                FirebaseRecyclerAdapter<searchclass, search_product.UserViewHolder>
-                        (searchclass.class,R.layout.search_list,search_product.UserViewHolder.class,r1) {
-                    @Override
-                    protected void populateViewHolder(search_product.UserViewHolder viewHolder, searchclass model, int position) {
-
-                        viewHolder.setDetails(model.getstore());
-                        viewHolder.getContext(getApplicationContext());
-
-                    }
-                };
-
-        mrecycle.setAdapter(firebaseRecycleradapter);
-    }
-
-
-
-
-
-
-
-    public  static class UserViewHolder extends RecyclerView.ViewHolder{
-
-        View mview;
-        TextView locate;
-        Context ctx;
-        String key;
-        String uid;
-        Double longi,lati;
-        demands d1;
-        DatabaseReference mref1,mref2;
-
-        public UserViewHolder(View itemView) {
-            super(itemView);
-            mview=itemView;
-
-
-
-        }
-
-        public  void getContext(Context ctx){
-            this.ctx=ctx;
-        }
-        public  void putkey(String key){
-            this.key=key;
-
-
-        }
-
-        public void  setDetails(String store_name){
-            TextView t1=(TextView) mview.findViewById(R.id.t1);
-
-            t1.setText(store_name);
-
-
-
-        }
-
-
-    }
-
-*/
 
 
 
@@ -442,6 +475,10 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
         mgooglemap.setMyLocationEnabled(true);
 
 
+
+
+
+
         mGoogleApiClient = new GoogleApiClient.Builder(this).
                 addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
@@ -453,12 +490,25 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
 
-        //  tagging a product
         mgooglemap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
+
+
+
+          //setting up main center point
             @Override
             public void onMapClick(LatLng point) {
                 // TODO Auto-generated method stub
+
+                if(locationpicked_marker!=null){
+                    locationpicked_marker.remove();
+                }
+                if(circle!=null){
+                    circle.remove();
+                }
+                MarkerOptions opt = new MarkerOptions().position(new LatLng(point.latitude,point.longitude));
+                locationpicked_marker=mgooglemap.addMarker(opt);
+                circle=drawcircle(point.latitude,point.longitude);
 
 
 
@@ -469,6 +519,9 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
         });
 
     }
+
+
+    Marker locationpicked_marker;
 
 
     //display menu
@@ -511,7 +564,7 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
         LatLng latlng = new LatLng(lat, lng);
         mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
         mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(zoom));
-        putmarker(lat, lng);
+
     }
 
     public void putmarker(double lat, double lng) {
@@ -525,11 +578,9 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
     public void currentlocation() {
          if(mLastlocation!=null) {
              gotolocation(mLastlocation.getLatitude(), mLastlocation.getLongitude(), 15);
-             putmarker(mLastlocation.getLatitude(), mLastlocation.getLongitude());
-             circle=drawcircle(mLastlocation.getLatitude(),mLastlocation.getLongitude());
          }
          else{
-             Toast.makeText(this,"searching click one more time",Toast.LENGTH_LONG).show();
+             Toast.makeText(this,"location not found,Please click again",Toast.LENGTH_LONG).show();
 
          }
 
@@ -553,6 +604,13 @@ public class search_product extends AppCompatActivity implements OnMapReadyCallb
     @Override
     public void onLocationChanged(Location location) {
         mLastlocation =location;
+        if(s1.equals("start")){
+            LatLng latlng = new LatLng( longitude1,latitude1);
+            mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
+            mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(16));
+            MarkerOptions opt = new MarkerOptions().position(new LatLng(longitude1,latitude1));
+            mgooglemap.addMarker(opt);
+        }
 
     }
 
