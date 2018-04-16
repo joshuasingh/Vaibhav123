@@ -7,6 +7,9 @@ import android.support.v4.app.NotificationCompat;
 
 import com.example.joshuamsingh.producto.MainActivity;
 import com.example.joshuamsingh.producto.R;
+import com.example.joshuamsingh.producto.message;
+import com.example.joshuamsingh.producto.search_product;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -23,14 +26,19 @@ public class MyFirebaseMessaging  extends FirebaseMessagingService{
 
     private void showNotification(RemoteMessage.Notification notification) {
 
-        Intent intent=new Intent(this,MainActivity.class);
+        Intent intent=new Intent(this,search_product.class);
+
+        intent.putExtra("body",notification.getTitle());
+        intent.putExtra("notify","start");
+
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingintent=PendingIntent.getActivity(this,0,intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
+
         NotificationCompat.Builder builder=new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
-                .setContentTitle(notification.getTitle())
+                .setContentTitle("STORE OPENED")
                 .setContentText(notification.getBody())
                 .setAutoCancel(true)
                 .setContentIntent(pendingintent);
