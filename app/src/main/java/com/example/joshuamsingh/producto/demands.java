@@ -16,6 +16,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -35,7 +36,7 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
     GoogleMap mgooglemap;
     String uid;
     Double longi,lati;
-
+     DataSnapshot ds;
 
 
     @Override
@@ -52,8 +53,19 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
 
 
 
-        t1=(TextView) findViewById(R.id.t1);
-        b1=(Button) findViewById(R.id.b1);
+        DatabaseReference ref45= FirebaseDatabase.getInstance().getReference().child("customer").child(uid);
+
+        ref45.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ds=dataSnapshot;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
        demandsearch();
 
@@ -98,44 +110,8 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
 
                         String key=getRef(position).getKey();
 
-                        //final FirebaseDatabase database = FirebaseDatabase.getInstance();
-                        //DatabaseReference mref1= database.getReference("customer").child(uid).child(key).child("l").child("0");
 
-
-
-
-              /*        mref1 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(key).child("l").child("0");
-
-                        mref2 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(key).child("l").child("1");
-
-                       mref1.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                             longi=dataSnapshot.getValue(Double.class);
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-
-
-                   mref2.addValueEventListener(new ValueEventListener() {
-                       @Override
-                       public void onDataChange(DataSnapshot dataSnapshot) {
-                           lati=dataSnapshot.getValue(Double.class);
-                       }
-
-                       @Override
-                       public void onCancelled(DatabaseError databaseError) {
-
-                       }
-                   });
-
-*/
-
-                      viewHolder.setDetails(model.getCategory(),model.getProduct(),model.getdate());
+                      viewHolder.setDetails(model.getCategory(),model.getProduct(),model.getdate(),ds,mgooglemap);
                        viewHolder.getContext(getApplicationContext());
                        viewHolder.putkey(key);
                     }
@@ -157,10 +133,12 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
         TextView locate;
         Context ctx;
         String key;
-        String uid;
+        String category;
         Double longi,lati;
         demands d1;
-        DatabaseReference mref1,mref2;
+       DataSnapshot ds;
+        GoogleMap mgoogle;
+        Marker m1;
 
         public UserViewHolder(View itemView) {
             super(itemView);
@@ -171,41 +149,18 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
             locate.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(ctx,key+"  "+longi+" "+lati,Toast.LENGTH_LONG).show();
-                    uid=d1.getuid();
-                    mref1 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(key).child("l").child("0");
 
-                    mref2 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(key).child("l").child("1");
-
-                    mref1.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            longi=dataSnapshot.getValue(Double.class);
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
+                    double lat = ds.child(key).child("l").child("0").getValue(double.class);
+                    double lng =ds.child(key).child("l").child("1").getValue(double.class);
+                    String r=Double.toString(lat);
+                    LatLng l1 = new LatLng(lat, lng);
+                    mgoogle.moveCamera(CameraUpdateFactory.newLatLng(l1));//camera moves with the user
+                    mgoogle.animateCamera(CameraUpdateFactory.zoomTo(16));
 
 
-                    mref2.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            lati=dataSnapshot.getValue(Double.class);
-                        }
+                        MarkerOptions opt = new MarkerOptions().title(category).position(new LatLng(lat, lng));
+                        m1 = mgoogle.addMarker(opt);
 
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-
-
-
-
-                    d1.gotolocation(longi,lati,21);
                 }
             });
 
@@ -220,11 +175,13 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
 
         }
 
-        public void  setDetails(String category,String product,String date){
+        public void  setDetails(String category,String product,String date,DataSnapshot ds,GoogleMap mgoogle){
             TextView t1=(TextView) mview.findViewById(R.id.t1);
             TextView t2=(TextView) mview.findViewById(R.id.t2);
             TextView t3=(TextView) mview.findViewById(R.id.t3);
-
+            this.category=category;
+            this.ds=ds;
+            this.mgoogle=mgoogle;
             t1.setText(category);
             t2.setText(product);
             t3.setText(date);
