@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,6 +62,7 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
             setContentView(R.layout.activity_customermap);
             initmap();
             b1 = (Button) findViewById(R.id.b1);
+            e1 = (EditText) findViewById(R.id.e1);
          b1.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View view) {
@@ -102,17 +104,22 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
 
 
     public void geolocate(View view) throws IOException {
-        e1 = (EditText) findViewById(R.id.e1);
         String location = e1.getText().toString();
+        if(TextUtils.isEmpty(location)){
 
-        Geocoder gc = new Geocoder(this);//changes string to latitude and longitude
-        List<Address> list = gc.getFromLocationName(location, 1);//get list of matching addresses
-        Address address = list.get(0);
-        String locality = address.getLocality();
-        Toast.makeText(this, locality, Toast.LENGTH_LONG).show();
-        double lat = address.getLatitude();
-        double lng = address.getLongitude();
-        gotolocation(lat, lng, 15);
+            Toast.makeText(this,"fields are empty",Toast.LENGTH_LONG).show();
+
+       }
+        else{ Geocoder gc = new Geocoder(this);//changes string to latitude and longitude
+            List<Address> list = gc.getFromLocationName(location, 1);//get list of matching addresses
+            Address address = list.get(0);
+            String locality = address.getLocality();
+            Toast.makeText(this, locality, Toast.LENGTH_LONG).show();
+            double lat = address.getLatitude();
+            double lng = address.getLongitude();
+            gotolocation(lat, lng, 15);
+
+        }
     }
 
 
@@ -174,8 +181,7 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
 
 
 
-                //DatabaseReference ref1= FirebaseDatabase.getInstance().getReference("user").child("customer demands").child(uid).child("l");
-                //ref.push().setValue(t1);
+
 
             }
         });
@@ -233,11 +239,15 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
     }
 
 
-
+      Marker currentmarker;
         public void currentlocation() {
             if(mLastlocation!=null) {
                 gotolocation(mLastlocation.getLatitude(), mLastlocation.getLongitude(), 15);
-                putmarker(mLastlocation.getLatitude(), mLastlocation.getLongitude());
+                MarkerOptions opt = new MarkerOptions().position(new LatLng(mLastlocation.getLatitude(), mLastlocation.getLongitude()));
+                if(currentmarker!=null){
+                    currentmarker.remove();
+                }
+                currentmarker=mgooglemap.addMarker(opt);
 
             }
             else{
@@ -253,6 +263,9 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
     public void onLocationChanged(Location location) {
 
         mLastlocation =location;
+         LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+        mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
+        mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(15));
     }
 
     LocationRequest mLocationrequest;
