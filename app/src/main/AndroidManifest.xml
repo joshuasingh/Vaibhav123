@@ -28,6 +28,7 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -48,18 +49,20 @@
         <activity android:name=".represented" />
         <activity android:name=".piechart" />
         <activity android:name=".tag_a_store" />
-        <activity android:name=".store_info"/>
+        <activity android:name=".store_info" />
+
         <service android:name=".Service.MyFirebaseServices">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
         <service android:name=".Service.MyFirebaseMessaging">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
+        <activity android:name=".message"></activity>
     </application>
 
 </manifest>
