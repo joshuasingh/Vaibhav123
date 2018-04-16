@@ -7,14 +7,6 @@
     tools:context="com.example.joshuamsingh.producto.represented">
 
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/y1"
-        android:text="gt"
-        android:layout_below="@+id/e1"
-        android:layout_alignParentStart="true" />
-
     <fragment
         android:id="@+id/mapfragment"
         android:name="com.google.android.gms.maps.MapFragment"
@@ -30,8 +22,8 @@
         android:text="sear"
         android:id="@+id/b1"
         android:layout_below="@+id/mapfragment"
-        android:layout_toEndOf="@+id/e1"
-        android:layout_marginStart="24dp" />
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="10dp" />
     <NumberPicker
         android:id="@+id/np"
         android:layout_width="wrap_content"
@@ -40,21 +32,16 @@
         android:layout_alignBottom="@+id/b1"
         android:layout_alignParentEnd="true" />
 
-    <EditText
-        android:id="@+id/e1"
-        android:layout_width="150dp"
-        android:layout_below="@+id/mapfragment"
-        android:layout_height="40dp"
-        android:hint="enter the product" />
-
     <Button
         android:id="@+id/b2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="current"
-        android:layout_below="@+id/e1"
-        android:layout_toEndOf="@+id/y1"
-        android:layout_marginStart="17dp" />
+        android:layout_alignBaseline="@+id/b1"
+        android:layout_alignBottom="@+id/b1"
+        android:layout_toStartOf="@+id/p"
+        android:layout_marginEnd="12dp" />
+
     <com.github.mikephil.charting.charts.PieChart
         android:layout_width="match_parent"
         android:layout_height="300dp"
@@ -65,9 +52,10 @@
         android:layout_height="wrap_content"
         android:text="pie"
         android:id="@+id/p"
-        android:layout_below="@+id/b1"
-        android:layout_toEndOf="@+id/b2"
-        android:layout_marginStart="12dp" />
+        android:layout_marginEnd="13dp"
+        android:layout_alignBaseline="@+id/b2"
+        android:layout_alignBottom="@+id/b2"
+        android:layout_toStartOf="@+id/np" />
 
 
 </RelativeLayout>
