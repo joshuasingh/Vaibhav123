@@ -1,61 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.joshuamsingh.producto.represented">
 
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/drawer_layout"
+        tools:context="com.example.joshuamsingh.producto.represented">
 
+   <RelativeLayout
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
     <fragment
         android:id="@+id/mapfragment"
         android:name="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="360dp"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp" />
 
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="sear"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:text="Search"
         android:id="@+id/b1"
-        android:layout_below="@+id/mapfragment"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="10dp" />
+        android:layout_alignBottom="@+id/p"
+        android:layout_alignTop="@+id/p"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/p" />
+
     <NumberPicker
         android:id="@+id/np"
-        android:layout_width="wrap_content"
-        android:layout_height="75dp"
-        android:layout_alignBaseline="@+id/b1"
-        android:layout_alignBottom="@+id/b1"
-        android:layout_alignParentEnd="true" />
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/colorTransparentWhite"
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:layout_weight="0.02"
+        android:layout_above="@+id/p"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="45dp" />
 
     <Button
         android:id="@+id/b2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="current"
-        android:layout_alignBaseline="@+id/b1"
-        android:layout_alignBottom="@+id/b1"
-        android:layout_toStartOf="@+id/p"
-        android:layout_marginEnd="12dp" />
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/ic_my_location_black_24dp"
+        android:onClick="currentlocation"
+        android:layout_marginEnd="11dp"
+        android:layout_marginTop="12dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
 
-    <com.github.mikephil.charting.charts.PieChart
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:id="@+id/piechart"
-        android:layout_below="@+id/np"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="pie"
+       android:text="Generate Pie Chart"
         android:id="@+id/p"
-        android:layout_marginEnd="13dp"
-        android:layout_alignBaseline="@+id/b2"
-        android:layout_alignBottom="@+id/b2"
-        android:layout_toStartOf="@+id/np" />
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="0dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:text="Select Your Range:"
+        android:textSize="20sp"
+        android:layout_marginBottom="10dp"
+        android:layout_below="@+id/mapfragment"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
 
 
-</RelativeLayout>
+   </RelativeLayout>
+
+    <android.support.design.widget.NavigationView
+        android:id="@+id/nav"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        app:menu="@menu/navigation_drawer1"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/navigation_header">
+
+    </android.support.design.widget.NavigationView>
+
+</android.support.v4.widget.DrawerLayout>

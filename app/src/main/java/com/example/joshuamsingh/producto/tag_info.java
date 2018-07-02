@@ -8,6 +8,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -99,80 +100,91 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
             b1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
-
-                    double latitude = Double.parseDouble(lat);
-                    double longitude = Double.parseDouble(lng);
-                    String lat = Double.toString(latitude);
-                    String lng = Double.toString(longitude);
-
-
-                    try {
-                        Geocoder geocoder = new Geocoder(tag_info.this, Locale.getDefault());
-                        addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    try{
-                    String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-                    String city = addresses.get(0).getLocality();
-                    String state = addresses.get(0).getAdminArea();
-                    String country = addresses.get(0).getCountryName();
-                    String postalCode = addresses.get(0).getPostalCode();
-                    String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
-
-
-                    String uniqueID = UUID.randomUUID().toString();
-
-                    LatLng l1 = new LatLng(latitude, longitude);
-                    String t = l1.toString().trim();
                     String t1 = autocomplete.getText().toString();//product
                     category = e2.getSelectedItem().toString();//category
 
-                    //put the global list
-                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    Toast.makeText(tag_info.this, country, Toast.LENGTH_SHORT).show();
-
-                    if (state != null) {
-                        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state);
-                        GeoFire geofire = new GeoFire(ref);
-                        geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
-                        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("category");
-                        ref1.setValue(category);
-                        DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("product");
-                        ref2.setValue(t1);
-                        DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("uid");
-                        ref3.setValue(uid);
-                        DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("token");
-                        ref4.setValue(FirebaseInstanceId.getInstance().getToken());
-
-
-                        //put the personal info
-
-                        DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("customer").child(uid);
-                        GeoFire geofire11 = new GeoFire(ref11);
-                        geofire11.setLocation(uniqueID, new GeoLocation(latitude, longitude));
-                        DatabaseReference ref12 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("category");
-                        ref12.setValue(category);
-                        DatabaseReference ref13 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("product");
-                        ref13.setValue(t1);
-                        DatabaseReference ref14 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("date");
-                        ref14.setValue(currentDate);
-
-
-                        finish();
-                    } else {
-                        Toast.makeText(tag_info.this, "unable get your location", Toast.LENGTH_LONG).show();
-
+                    if(category.equals("---- Nothing Selected ----") || TextUtils.isEmpty(t1)) {
+                        Toast.makeText(tag_info.this,"enter a approproate category/input the product",Toast.LENGTH_LONG).show();
                     }
-                    }
-                    catch (Exception e) {
-                        Log.e("Alert","Try n catch:::");
-                        Toast.makeText(tag_info.this, "some problem occured try again ",Toast.LENGTH_LONG).show();
+                    else {
+                        double latitude = Double.parseDouble(lat);
+                        double longitude = Double.parseDouble(lng);
+                        String lat = Double.toString(latitude);
+                        String lng = Double.toString(longitude);
 
 
+                        try {
+                            Geocoder geocoder = new Geocoder(tag_info.this, Locale.getDefault());
+                            addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+                            String city = addresses.get(0).getLocality();
+                            String state = addresses.get(0).getAdminArea();
+                            String country = addresses.get(0).getCountryName();
+                            String postalCode = addresses.get(0).getPostalCode();
+                            String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
+
+
+                            String uniqueID = UUID.randomUUID().toString();
+
+                            LatLng l1 = new LatLng(latitude, longitude);
+                            String t = l1.toString().trim();
+
+
+                            //put the global list
+                            String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+
+                            if (state != null) {
+                                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state);
+                                GeoFire geofire = new GeoFire(ref);
+                                geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
+                                DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("category");
+                                ref1.setValue(category);
+                                DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("product");
+                                ref2.setValue(t1);
+                                DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("uid");
+                                ref3.setValue(uid);
+                                String tok=FirebaseInstanceId.getInstance().getToken();
+                               // DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global demanded items").child(country).child(state).child(uniqueID).child("token");
+                               // ref4.setValue(tok);
+
+                                //adding notification details
+                                DatabaseReference not = FirebaseDatabase.getInstance().getReference("notification").child(uid).child("latest_id");
+                                not.setValue(tok);
+
+
+                                //put the personal finfo
+
+                                DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("customer").child(uid);
+                                GeoFire geofire11 = new GeoFire(ref11);
+                                geofire11.setLocation(uniqueID, new GeoLocation(latitude, longitude));
+                                DatabaseReference ref12 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("category");
+                                ref12.setValue(category);
+                                DatabaseReference ref13 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("product");
+                                ref13.setValue(t1);
+                                DatabaseReference ref14 = FirebaseDatabase.getInstance().getReference("customer").child(uid).child(uniqueID).child("date");
+                                ref14.setValue(currentDate);
+
+
+                                finish();
+                            } else {
+                                Toast.makeText(tag_info.this, "unable get your location", Toast.LENGTH_LONG).show();
+
+                            }
+
+
+                        } catch (Exception e) {
+                            Log.e("Alert", "Try n catch:::");
+                            Toast.makeText(tag_info.this, "some problem occured try again ", Toast.LENGTH_LONG).show();
+
+                        }
                     }
+
 
                 }
             });
@@ -189,8 +201,13 @@ public class tag_info extends AppCompatActivity implements AdapterView.OnItemSel
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-       category=adapterView.getItemAtPosition(i).toString();
-    }
+        if(e2.getSelectedItem().toString().equals("---- Nothing Selected ----")){
+
+        }
+        else {
+            category = adapterView.getItemAtPosition(i).toString();
+        }
+        }
 
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {

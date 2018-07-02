@@ -8,9 +8,14 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -38,11 +43,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.IOException;
 import java.util.List;
 
-public class customermap extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class customermap extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,NavigationView.OnNavigationItemSelectedListener {
 
     GoogleMap mgooglemap;
     Location mLastlocation, location;
@@ -51,6 +58,10 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
     private EditText e1;
     private LocationManager locationManager;
     Marker marker;
+    private DrawerLayout mdrawer;
+    private ActionBarDrawerToggle mtoggle;
+    private NavigationView nav;
+    int i;
 
 
     @Override
@@ -63,6 +74,21 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
             initmap();
             b1 = (Button) findViewById(R.id.b1);
             e1 = (EditText) findViewById(R.id.e1);
+
+          //navigation drawer
+            nav=(NavigationView) findViewById(R.id.nav);
+            nav.setNavigationItemSelectedListener(this);
+            mdrawer=(DrawerLayout) findViewById(R.id.drawer_layout);
+            mtoggle=new ActionBarDrawerToggle(this,mdrawer,R.string.open,R.string.close);
+            mdrawer.addDrawerListener(mtoggle);
+            mtoggle.syncState();
+
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+
+
+
          b1.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View view) {
@@ -79,6 +105,9 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
 
 
     }
+
+
+
 
 
     private void initmap() {
@@ -200,6 +229,12 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
 
     public boolean onOptionsItemSelected(MenuItem item) {
 
+        if(mtoggle.onOptionsItemSelected(item)){
+            return true;
+        }
+
+
+
         switch (item.getItemId()) {
             case R.id.mapTypeNone:
                 mgooglemap.setMapType(GoogleMap.MAP_TYPE_NONE);
@@ -229,7 +264,7 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
         LatLng latlng = new LatLng(lat, lng);
         mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
         mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(zoom));
-        putmarker(lat, lng);
+        //putmarker(lat, lng);
     }
 
     public void putmarker(double lat, double lng) {
@@ -263,9 +298,14 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
     public void onLocationChanged(Location location) {
 
         mLastlocation =location;
-         LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
-        mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
-        mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(15));
+
+        if(mLastlocation!=null && i==0){
+            i=1;
+            gotolocation(mLastlocation.getLatitude(),mLastlocation.getLongitude(),15);
+        }
+        //LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+        //mgooglemap.moveCamera(CameraUpdateFactory.newLatLng(latlng));//camera moves with the user
+        //mgooglemap.animateCamera(CameraUpdateFactory.zoomTo(15));
     }
 
     LocationRequest mLocationrequest;
@@ -298,4 +338,51 @@ public class customermap extends AppCompatActivity implements OnMapReadyCallback
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id=item.getItemId();
+        if(id==R.id.home){
+            startActivity(new Intent(customermap.this,select.class));
+        }
+
+        if(id==R.id.search){
+            startActivity(new Intent(customermap.this,search_product.class));
+        }
+        if(id==R.id.view){
+            startActivity(new Intent(customermap.this,demands.class));
+        }
+        if(id==R.id.log){
+            FirebaseAuth.getInstance().signOut();
+            stopService(new Intent(customermap.this,serviceclass.class));
+            new AsyncTask<Void,Void,Void>()
+            {
+                @Override
+                protected Void doInBackground(Void... params)
+                {
+                    {
+                        try
+                        {
+                            FirebaseInstanceId.getInstance().deleteInstanceId();
+                        } catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                    return null;
+                }
+                @Override
+                protected void onPostExecute(Void result)
+                {
+                    //call your activity where you want to land after log out
+                }
+            }.execute();
+            startActivity(new Intent(customermap.this,MainActivity.class));
+            finish();
+        }
+
+        mdrawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
 }

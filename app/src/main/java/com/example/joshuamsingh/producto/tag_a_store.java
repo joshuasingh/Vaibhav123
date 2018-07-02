@@ -9,11 +9,17 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,11 +51,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.IOException;
 import java.util.List;
 
-public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class tag_a_store extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     GoogleMap mgooglemap;
     Location mLastlocation, location;
@@ -57,7 +64,6 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
     private Button b1,b2;
     private EditText e1;
     private LocationManager locationManager;
-
     private TextView t1;
     private String product;
     private double radius;
@@ -66,6 +72,9 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
     NumberPicker np;
     String[] name;// Array Declared
     int i=0;
+    private DrawerLayout mdrawer;
+    private ActionBarDrawerToggle mtoggle;
+    private NavigationView nav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +86,17 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
             initmap();
             b1 = (Button) findViewById(R.id.b1);
             e1 = (EditText) findViewById(R.id.e1);
+
+
+
+            nav=(NavigationView) findViewById(R.id.nav);
+            nav.setNavigationItemSelectedListener(this);
+            mdrawer=(DrawerLayout) findViewById(R.id.drawer_layout);
+            mtoggle=new ActionBarDrawerToggle(this,mdrawer,R.string.open,R.string.close);
+            mdrawer.addDrawerListener(mtoggle);
+            mtoggle.syncState();
+
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
 
@@ -143,14 +163,20 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
         e1 = (EditText) findViewById(R.id.e1);
         String location = e1.getText().toString();
 
-        Geocoder gc = new Geocoder(this);//changes string to latitude and longitude
-        List<Address> list = gc.getFromLocationName(location, 1);//get list of matching addresses
-        Address address = list.get(0);
-        String locality = address.getLocality();
-        Toast.makeText(this, locality, Toast.LENGTH_LONG).show();
-        double lat = address.getLatitude();
-        double lng = address.getLongitude();
-        gotolocation(lat, lng, 15);
+        if(TextUtils.isEmpty(location)){
+            Toast.makeText(this,"enter a location first",Toast.LENGTH_LONG).show();
+        }
+     else{
+
+            Geocoder gc = new Geocoder(this);//changes string to latitude and longitude
+            List<Address> list = gc.getFromLocationName(location, 1);//get list of matching addresses
+            Address address = list.get(0);
+            String locality = address.getLocality();
+            Toast.makeText(this, locality, Toast.LENGTH_LONG).show();
+            double lat = address.getLatitude();
+            double lng = address.getLongitude();
+            gotolocation(lat, lng, 15);
+        }
 
     }
 
@@ -168,7 +194,7 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mgooglemap.setMyLocationEnabled(true);
+
 
 
 
@@ -225,6 +251,10 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
     //functionality of map menu
 
     public boolean onOptionsItemSelected(MenuItem item) {
+        if(mtoggle.onOptionsItemSelected(item)){
+            return true;
+        }
+
 
         switch (item.getItemId()) {
             case R.id.mapTypeNone:
@@ -331,5 +361,49 @@ public class tag_a_store extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id=item.getItemId();
+
+        if(id==R.id.view1){
+            startActivity(new Intent(tag_a_store.this,represented.class));
+        }
+
+        if(id==R.id.home1){
+            startActivity(new Intent(tag_a_store.this,seller.class));
+        }
+        if(id==R.id.log1){
+            FirebaseAuth.getInstance().signOut();
+
+            new AsyncTask<Void,Void,Void>()
+            {
+                @Override
+                protected Void doInBackground(Void... params)
+                {
+                    {
+                        try
+                        {
+                            FirebaseInstanceId.getInstance().deleteInstanceId();
+                        } catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                    return null;
+                }
+                @Override
+                protected void onPostExecute(Void result)
+                {
+                    //call your activity where you want to land after log out
+                }
+            }.execute();
+            startActivity(new Intent(tag_a_store.this,MainActivity.class));
+            finish();
+        }
+
+        mdrawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

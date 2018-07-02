@@ -9,9 +9,14 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -53,6 +58,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -61,7 +67,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class represented extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class represented extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     GoogleMap mgooglemap;
     Location mLastlocation, location;
@@ -70,7 +76,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     private Button b1,b2,gt,p;
     private EditText e1;
     private LocationManager locationManager;
-
+    LatLng locationpicked;
     private TextView t1;
     private String product;
     private double radius;
@@ -78,6 +84,8 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     TextView text;
     NumberPicker np;
     int i=0;
+    String state,country;
+    ArrayList<Marker> m;
     ArrayList<String> iden,category;
     DatabaseReference ref1;
     String[] product_name;
@@ -87,7 +95,9 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     List<Address> addresses;
     View b,d;
 
-
+    private DrawerLayout mdrawer;
+    private ActionBarDrawerToggle mtoggle;
+    private NavigationView nav;
 
 
     @Override
@@ -129,6 +139,22 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
             }
         });
 
+
+        //navigation drawer
+        nav=(NavigationView) findViewById(R.id.nav);
+        nav.setNavigationItemSelectedListener(this);
+        mdrawer=(DrawerLayout) findViewById(R.id.drawer_layout);
+        mtoggle=new ActionBarDrawerToggle(this,mdrawer,R.string.open,R.string.close);
+        mdrawer.addDrawerListener(mtoggle);
+        mtoggle.syncState();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+
+
+
+        m = new ArrayList<>();
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -168,10 +194,12 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
                 public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                     //Display the newly selected number from picker
                    try {
-                       circle.setRadius(newVal * 1000);
-                       radius = newVal;
+                       int g=1000*newVal;
+
+                       circle.setRadius((double)g);
+                       radius = (double)newVal;
                    }catch (Exception e) {
-                        Toast.makeText(represented.this,"point of center not selected",Toast.LENGTH_LONG).show();
+                        Toast.makeText(represented.this,"point of center not selected",Toast.LENGTH_SHORT).show();
 
 
                     }
@@ -181,7 +209,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
 
 
         ref1 = FirebaseDatabase.getInstance().getReference()
-                .child("global demanded items").child("India").child("Uttar Pradesh");
+                .child("global demanded items");
 
         ref1.addValueEventListener(new ValueEventListener() {
             @Override
@@ -212,14 +240,25 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
                   e.printStackTrace();
               }
 
-              String state = addresses.get(0).getAdminArea();
-              String country = addresses.get(0).getCountryName();
+
+              if (m.size() != 0) {
+                  int y = m.size();
+                  if (y != 0) {
+                      for (int k = 0; k < y; k++) {
+                          m.get(k).remove();
+                      }
+                  }
+
+              }
+
+               state = addresses.get(0).getAdminArea();
+               country = addresses.get(0).getCountryName();
               String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
               DatabaseReference ref = FirebaseDatabase.getInstance().
                       getReference().child("global demanded items").
                       child(country).child(state);
               GeoFire geofire = new GeoFire(ref);
-              GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(curloc.latitude, curloc.longitude), radius);
+              GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(locationpicked.latitude,locationpicked.longitude), radius);
               geoQuery.removeAllListeners();
 
               geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
@@ -231,7 +270,8 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
 
                       iden.add(key);
                       MarkerOptions opt = new MarkerOptions().position(new LatLng(location.latitude, location.longitude));
-                      mgooglemap.addMarker(opt);
+
+                      m.add(mgooglemap.addMarker(opt));
 
                   }
 
@@ -277,7 +317,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
         int g=iden.size();
 
        for(int i=0;i<g;i++) {
-            i1.setcategory(ds.child(iden.get(i)).getValue(info.class).getcategory());
+            i1.setcategory(ds.child(country).child(state).child(iden.get(i)).getValue(info.class).getcategory());
             category.add(i1.getcategory());
         }
 
@@ -285,63 +325,63 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
 
         product_name=getResources().getStringArray(R.array.category);
 
-        for(int i=0;i<product_name.length;i++) {
-            String y = product_name[i];
+        for(int i=0;i<product_name.length-1;i++) {
+            String y = product_name[i+1];
             frequency[i] = Collections.frequency(category, y);
         }
 
-      /*  int n=frequency.length;
 
-        for (int i=0 ; i<n-1; i++)
+        for (int i = 0; i < product_name.length - 1; i++)
         {
-            for (int d = 0 ; d < n - i - 1; d++)
-            {
-                if (frequency[d] > frequency[d+1])
-                {
-                    int swap       = frequency[d];
-                    frequency[d]   = frequency[d+1];
-                    frequency[d+1] = swap;
-
-                    //
-                    String swap1       = product_name[d];
-                    product_name[d]   = product_name[d+1];
-                   product_name[d+1] = swap1;
+            int index = i;
+            for (int j = i + 1; j <product_name.length-1; j++){
+                if (frequency[j] > frequency[index]){
+                    index = j;//searching for lowest index
                 }
             }
-        }*/
+            int smallerNumber = frequency[index];
+            frequency[index] = frequency[i];
+            frequency[i] = smallerNumber;
 
 
-
-
-
-
-
-
-
-        setupchart();
-    }
-
-
-
-
-
-
-    private void setupchart() {
-
-        List<PieEntry> pieEntries=new ArrayList<>();
-        for(int i=0;i<product_name.length;i++){
-            pieEntries.add(new PieEntry(frequency[i],product_name[i]));
+            String msmallerNumber = product_name[index+1];
+            product_name[index+1] = product_name[i+1];
+            product_name[i+1] = msmallerNumber;
         }
 
-        PieDataSet dataset=new PieDataSet(pieEntries,"rainfall");
-        dataset.setColors(ColorTemplate.COLORFUL_COLORS);
-        PieData data=new PieData(dataset);
 
 
-        PieChart chart=(PieChart) findViewById(R.id.piechart);
-        chart.setData(data);
-        chart.invalidate();
+        Intent i=new Intent(this,piechart.class);
+        i.putExtra("cat1",product_name[1]);
+        i.putExtra("cat2",product_name[2]);
+        i.putExtra("cat3",product_name[3]);
+        i.putExtra("cat4",product_name[4]);
+        i.putExtra("cat5",product_name[5]);
+        i.putExtra("cat6",product_name[6]);
+        i.putExtra("cat7",product_name[7]);
+        i.putExtra("cat8",product_name[8]);
+
+
+        i.putExtra("num1",Integer.toString(frequency[0]));
+        i.putExtra("num2",Integer.toString(frequency[1]));
+        i.putExtra("num3",Integer.toString(frequency[2]));
+        i.putExtra("num4",Integer.toString(frequency[3]));
+        i.putExtra("num5",Integer.toString(frequency[4]));
+        i.putExtra("num6",Integer.toString(frequency[5]));
+        i.putExtra("num7",Integer.toString(frequency[6]));
+        i.putExtra("num8",Integer.toString(frequency[7]));
+
+        startActivity(i);
+
+
+
     }
+
+
+
+
+
+
 
 
     private void initmap() {
@@ -397,7 +437,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
         }
 
 
-        mgooglemap.setMyLocationEnabled(true);
+
 
 
 
@@ -420,7 +460,7 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onMapClick(LatLng point) {
                 // TODO Auto-generated method stub
-
+                locationpicked=new LatLng(point.latitude,point.longitude);
                 curloc=point;
                 if(locationpicked_marker!=null){
                     locationpicked_marker.remove();
@@ -454,6 +494,12 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     //functionality of map menu
 
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(mtoggle.onOptionsItemSelected(item)){
+            return true;
+        }
+
+
 
         switch (item.getItemId()) {
             case R.id.mapTypeNone:
@@ -524,6 +570,10 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     public void onLocationChanged(Location location) {
         mLastlocation =location;
 
+        if(mLastlocation!=null && i==0){
+            i=1;
+            gotolocation(mLastlocation.getLatitude(),mLastlocation.getLongitude(),15);
+        }
     }
 
     LocationRequest mLocationrequest;
@@ -555,5 +605,49 @@ public class represented extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id=item.getItemId();
+
+        if(id==R.id.home1){
+            startActivity(new Intent(represented.this,seller.class));
+        }
+
+        if(id==R.id.store1){
+            startActivity(new Intent(represented.this,tag_a_store.class));
+        }
+        if(id==R.id.log1){
+            FirebaseAuth.getInstance().signOut();
+
+            new AsyncTask<Void,Void,Void>()
+            {
+                @Override
+                protected Void doInBackground(Void... params)
+                {
+                    {
+                        try
+                        {
+                            FirebaseInstanceId.getInstance().deleteInstanceId();
+                        } catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                    return null;
+                }
+                @Override
+                protected void onPostExecute(Void result)
+                {
+                    //call your activity where you want to land after log out
+                }
+            }.execute();
+            startActivity(new Intent(represented.this,MainActivity.class));
+            finish();
+        }
+
+        mdrawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

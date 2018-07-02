@@ -5,7 +5,11 @@
     <string name="map_type_terrain">Terrain</string>
     <string name="map_type_satellite">Satellite</string>
     <string name="map_type_hybrid">Hybrid</string>
+    <string name="auth_failed">some error occured</string>
+    <string name="open">open</string>
+    <string name="close">close</string>
     <string-array name="product">
+
         <item>car </item>
         <item>soap</item>
         <item>towel</item>
@@ -18,15 +22,45 @@
     </string-array>
 
     <string-array name="category">
-
-        <item>tv,appliances Electronic</item>
-        <item>home,kitchen</item>
-        <item>pets</item>
-        <item>car </item>
-        <item>motorbike</item>
-        <item>industrial</item>
-        <item>Books</item>
-        <item>Beauty product</item>
+        <item>---- Nothing Selected ----</item>
+        <item>Mobile Phone and Accessories</item>
+        <item>Laptops, Computers and Accessories</item>
+        <item>Electronic Appliances</item>
+        <item>Musical Instruments</item>
+        <item>Shoes</item>
+        <item>Jewellery</item>
+        <item>Bag and luggage</item>
+        <item>Watches</item>
+        <item>Clothing (Men)</item>
+        <item>Clothing (Women)</item>
+        <item>Clothing (Kids)</item>
+        <item>Opticals and Sunglasses</item>
+        <item>Books and Magazines</item>
+        <item>Kitchen and Dinning</item>
+        <item>Gifts, Cards and Flowers</item>
+        <item>Art Gallery</item>
+        <item>Pet Supplies</item>
+        <item>Beauty and Grooming</item>
+        <item>Food and Nutrition</item>
+        <item>Groceries</item>
+        <item>General Store</item>
+        <item>Sports and Fittness</item>
+        <item>Toys and Games</item>
+        <item>Medicines</item>
+        <item>Car</item>
+        <item>Motorbike</item>
+        <item>Chemicals</item>
+        <item>Video games, Movies and Music</item>
+        <item>Mobile Recharge</item>
 
     </string-array>
+
+
+    <string name="title_activity_profile_nav">ProfileNavActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
 </resources>

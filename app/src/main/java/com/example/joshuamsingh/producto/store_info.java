@@ -50,21 +50,24 @@ public class store_info extends AppCompatActivity {
     EditText e1;
     Spinner s1;
     ListView mlist;
-    ArrayList<String> cat,tokenlist;
+    ArrayList<String> cat,tokenlist,uidgetter;
     ArrayAdapter<String> arrayAdapter;
     Button b1;
     DatabaseReference mref;
     String lat,lng;
+    Sender sender;
     List<Address> addresses;
     Calendar calendar;
     String currentDate,t1;
-    DataSnapshot ds;
+    DataSnapshot ds,ds1;
     double latitude,longitude;
     String state,country;
-    Button b2;
+    Notification notification;
+
     APIService mservice;
     int checklist=0;
     LatLng l1;
+    int i,j=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +79,9 @@ public class store_info extends AppCompatActivity {
         mlist=(ListView) findViewById(R.id.l1);
         cat=new ArrayList<>();
         tokenlist=new ArrayList<>();
+        uidgetter=new ArrayList<>();
         b1=(Button) findViewById(R.id.b1);
-        b2=(Button) findViewById(R.id.b2);
+
 
 
         //getting client
@@ -110,15 +114,24 @@ public class store_info extends AppCompatActivity {
         });
 
 
+        DatabaseReference ref451= FirebaseDatabase.getInstance().getReference().child("notification");
+
+        ref451.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ds1=dataSnapshot;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
 
-       b2.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View view) {
 
-               mess();
-           }
-       });
+
+
 
        mlist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
            @Override
@@ -167,195 +180,221 @@ public class store_info extends AppCompatActivity {
            public void onClick(View view) {
 
                //String a=mlist.getItemAtPosition(1).toString();//get item from listview
+                try {
+
+                    latitude = Double.parseDouble(lat);
+                    longitude = Double.parseDouble(lng);
 
 
-                latitude = Double.parseDouble(lat);
-                longitude = Double.parseDouble(lng);
+                    try {
+                        Geocoder geocoder = new Geocoder(store_info.this, Locale.getDefault());
+                        addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+                    String city = addresses.get(0).getLocality();
+                    String state = addresses.get(0).getAdminArea();
+                    String country = addresses.get(0).getCountryName();
+                    String postalCode = addresses.get(0).getPostalCode();
+                    String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
 
 
-               try {
-                   Geocoder geocoder = new Geocoder(store_info.this, Locale.getDefault());
-                   addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
-               } catch (IOException e) {
-                   e.printStackTrace();
-               }
-
-               String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-               String city = addresses.get(0).getLocality();
-               String state = addresses.get(0).getAdminArea();
-               String country = addresses.get(0).getCountryName();
-               String postalCode = addresses.get(0).getPostalCode();
-               String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
+                    String uniqueID = UUID.randomUUID().toString();
+                    l1 = new LatLng(latitude, longitude);
+                    String t = l1.toString().trim();
+                    t1 = e1.getText().toString();//store name
 
 
-               String uniqueID = UUID.randomUUID().toString();
-               l1 = new LatLng(latitude,longitude);
-               String t = l1.toString().trim();
-              t1 =e1.getText().toString();//store name
+                    //put the global list
+                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
 
-               //put the global list
-               String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    if (state != null && !TextUtils.isEmpty(t1) && (cat.size() != 0)) {
+                        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state);
+                        GeoFire geofire = new GeoFire(ref);
+                        geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
+                        DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state).child(uniqueID).child("store_name");
+                        ref2.setValue(t1);
+                        DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state).child(uniqueID).child("uid");
+                        ref3.setValue(uid);
+
+                        for (int i = 0; i < mlist.getCount(); i++) {
+                            String uniqueID1 = UUID.randomUUID().toString();
+                            DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global store info").child(country)
+                                    .child(state).child(uniqueID).child("category list").child(uniqueID1).child("category");
+                            ref4.setValue(mlist.getItemAtPosition(i).toString());
+
+                        }
+                        //put the personal info
+
+                        DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("seller").child(uid);
+                        GeoFire geofire11 = new GeoFire(ref11);
+                        geofire11.setLocation(uniqueID, new GeoLocation(latitude, longitude));
+                        DatabaseReference ref13 = FirebaseDatabase.getInstance().getReference("seller").child(uid).child(uniqueID).child("store_name");
+                        ref13.setValue(t1);
+                        DatabaseReference ref14 = FirebaseDatabase.getInstance().getReference("seller").child(uid).child(uniqueID).child("date");
+                        ref14.setValue(currentDate);
+
+                        for (int i = 0; i < mlist.getCount(); i++) {
+                            String uniqueID1 = UUID.randomUUID().toString();
+                            DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("seller").child(uid)
+                                    .child(uniqueID).child("category list").child(uniqueID1).child("category");
+                            ref4.setValue(mlist.getItemAtPosition(i).toString());
+                        }
 
 
-               if(state!=null && !TextUtils.isEmpty(t1) && (cat.size()!=0)) {
-                   DatabaseReference ref = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state);
-                   GeoFire geofire = new GeoFire(ref);
-                   geofire.setLocation(uniqueID, new GeoLocation(latitude, longitude));
-                   DatabaseReference ref2 = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state).child(uniqueID).child("store_name");
-                   ref2.setValue(t1);
-                   DatabaseReference ref3 = FirebaseDatabase.getInstance().getReference("global store info").child(country).child(state).child(uniqueID).child("uid");
-                   ref3.setValue(uid);
+                    } else {
+                        Toast.makeText(store_info.this, "please fill all info", Toast.LENGTH_LONG).show();
 
-                     for(int i=0;i<mlist.getCount();i++) {
-                         String uniqueID1 = UUID.randomUUID().toString();
-                         DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("global store info").child(country)
-                                 .child(state).child(uniqueID).child("category list").child(uniqueID1).child("category");
-                         ref4.setValue(mlist.getItemAtPosition(i).toString());
-
-                     }
-                   //put the personal info
-
-                   DatabaseReference ref11 = FirebaseDatabase.getInstance().getReference("seller").child(uid);
-                   GeoFire geofire11 = new GeoFire(ref11);
-                   geofire11.setLocation(uniqueID, new GeoLocation(latitude, longitude));
-                   DatabaseReference ref13 = FirebaseDatabase.getInstance().getReference("seller").child(uid).child(uniqueID).child("store_name");
-                   ref13.setValue(t1);
-                   DatabaseReference ref14= FirebaseDatabase.getInstance().getReference("seller").child(uid).child(uniqueID).child("date");
-                   ref14.setValue(currentDate);
-
-                   for(int i=0;i<mlist.getCount();i++) {
-                       String uniqueID1 = UUID.randomUUID().toString();
-                       DatabaseReference ref4 = FirebaseDatabase.getInstance().getReference("seller").child(uid)
-                               .child(uniqueID).child("category list").child(uniqueID1).child("category");
-                       ref4.setValue(mlist.getItemAtPosition(i).toString());
-                   }
-
-
-               }
-               else{
-                   Toast.makeText(store_info.this,"please fill all info",Toast.LENGTH_LONG).show();
-
-               }
+                    }
+                } catch(Exception e)
+                    {
+                       Toast.makeText(store_info.this,"some error occured ,try again",Toast.LENGTH_LONG).show();
+                    }
 
 
 
            givenotification();
 
            }
+
        });
 
 
     }
 
+
+
+
     private void mess() {
-        double lat1=l1.latitude;
-        String lat2 = Double.toString(lat1);
+        try {
+            double lat1 = l1.latitude;
+            String lat2 = Double.toString(lat1);
 
-        double long1=l1.longitude;
-        String long2 = Double.toString(long1);
+            double long1 = l1.longitude;
+            String long2 = Double.toString(long1);
+            String go = long2.concat(",").concat(lat2);
 
-        String go=long2.concat(",").concat(lat2);
 
-        Toast.makeText(this,go,Toast.LENGTH_LONG).show();
-        for (int i=0; i < tokenlist.size(); i++) {
-            Notification notification = new Notification(t1+" opened in your vicinity and provides your demanded product",go );
-            Sender sender = new Sender(tokenlist.get(i), notification);
-            mservice.sendNotification(sender)
-                    .enqueue(new Callback<MyResponse>() {
-                        @Override
-                        public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
-                            if (response.body().success == 1) {
-                                Toast.makeText(store_info.this, "success", Toast.LENGTH_LONG).show();
-                            } else {
-                              //  Toast.makeText(store_info.this, "failure", Toast.LENGTH_LONG).show();
+            for ( i = 0; i < tokenlist.size(); i++) {
+                 notification = new Notification(t1 + " opened in your vicinity and provides your demanded product", go);
+                sender = new Sender(tokenlist.get(i), notification);
+                mservice.sendNotification(sender)
+                        .enqueue(new Callback<MyResponse>() {
+
+                            @Override
+                            public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+
+                                if (response.body().success == 1) {
+                                   // Toast.makeText(store_info.this, "success", Toast.LENGTH_SHORT).show();
+                                   // j++;
+                                } else {
+                                     /*String uniqueID = UUID.randomUUID().toString();
+                                    String uid=uidgetter.get(j);
+
+                                     DatabaseReference ref14 = FirebaseDatabase.getInstance().getReference("pending message").
+                                             child(uidgetter.get(j)).child(uniqueID);
+                                     ref14.setValue(notification);
+                                    j++;*/
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onFailure(Call<MyResponse> call, Throwable t) {
-                            Log.e("ERROR", t.getMessage());
+                            @Override
+                            public void onFailure(Call<MyResponse> call, Throwable t) {
+                                Log.e("ERROR", t.getMessage());
 
-                        }
-                    });
-        }
-    }
-    private void givenotification() {
-
-
-            try {
-                Geocoder geocoder = new Geocoder(store_info.this, Locale.getDefault());
-                addresses = geocoder.getFromLocation(latitude,longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
-            } catch (IOException e) {
-                e.printStackTrace();
+                            }
+                        });
             }
 
-            String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-            String city = addresses.get(0).getLocality();
-            state = addresses.get(0).getAdminArea();
-            country = addresses.get(0).getCountryName();
-            String postalCode = addresses.get(0).getPostalCode();
-            String knownName = addresses.get(0).getFeatureName();
+            finish();
+        }
+        catch(Exception e)
+        {
+            Toast.makeText(store_info.this,"error",Toast.LENGTH_SHORT).show();
+        }
+
+        }
 
 
+    private void givenotification() {
 
-            String uid= FirebaseAuth.getInstance().getCurrentUser().getUid();
-            DatabaseReference ref= FirebaseDatabase.getInstance().getReference().child("global demanded items").child(country).child(state);
-            GeoFire geofire=new GeoFire(ref);
-            GeoQuery geoQuery=geofire.queryAtLocation(new GeoLocation(latitude,longitude),3);
-            geoQuery.removeAllListeners();
+    try {
+        try {
+            Geocoder geocoder = new Geocoder(store_info.this, Locale.getDefault());
+            addresses = geocoder.getFromLocation(latitude, longitude, 1);// Here 1 represent max location result to returned, by documents it recommended 1 to 5
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-
-
-
-
-                @Override//when the product is found
-                public void onKeyEntered(String key, GeoLocation location) {
-
-
-
-                        String name = ds.child(country).child(state).child(key).child("category").getValue(String.class);
-
-                      for(int i=0;i<cat.size();i++) {
-                          if (name.equals(cat.get(i))) {
-                              String tok = ds.child(country).child(state).child(key).child("token").getValue(String.class);
-                              tokenlist.add(tok);
+        String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+        String city = addresses.get(0).getLocality();
+        state = addresses.get(0).getAdminArea();
+        country = addresses.get(0).getCountryName();
+        String postalCode = addresses.get(0).getPostalCode();
+        String knownName = addresses.get(0).getFeatureName();
 
 
+         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("global demanded items").child(country).child(state);
+        GeoFire geofire = new GeoFire(ref);
+        GeoQuery geoQuery = geofire.queryAtLocation(new GeoLocation(latitude, longitude), 3);
+        geoQuery.removeAllListeners();
+
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
 
 
-                      }
+            @Override//when the product is found
+            public void onKeyEntered(String key, GeoLocation location) {
+
+
+                String name = ds.child(country).child(state).child(key).child("category").getValue(String.class);
+                String receiver_id=ds.child(country).child(state).child(key).child("uid").getValue(String.class);
+
+                for (int i = 0; i < cat.size(); i++) {
+                    if (name.equals(cat.get(i))) {
+                        String tok = ds1.child(receiver_id).child("latest_id").getValue(String.class);//add the receivers id
+                        uidgetter.add(receiver_id);
+                        tokenlist.add(tok);
+
+
                     }
                 }
-                @Override
-                public void onKeyExited(String key) {
+            }
+
+            @Override
+            public void onKeyExited(String key) {
 
 
+            }
 
-                }
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
 
-                @Override
-                public void onKeyMoved(String key, GeoLocation location) {
+            }
 
-                }
+            @Override//when all has been searched for a radius
+            public void onGeoQueryReady() {
+                //if(!productfound) {
+                // radius++;
 
-                @Override//when all has been searched for a radius
-                public void onGeoQueryReady() {
-                    //if(!productfound) {
-                    // radius++;
+                //}
+                mess();
 
-                    //}
+            }
 
-                }
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
 
-                @Override
-                public void onGeoQueryError(DatabaseError error) {
+            }
+        });
 
-                }
-            });
-
-
+    }catch (Exception e)
+    {
+        Toast.makeText(this,"error occured please try again",Toast.LENGTH_LONG).show();
+    }
 
 
     }

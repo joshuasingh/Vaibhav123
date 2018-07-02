@@ -1,10 +1,18 @@
 package com.example.joshuamsingh.producto;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,10 +32,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.w3c.dom.Text;
 
-public class demands extends AppCompatActivity implements OnMapReadyCallback {
+import java.io.IOException;
+
+public class demands extends AppCompatActivity implements OnMapReadyCallback,NavigationView.OnNavigationItemSelectedListener {
 
     private RecyclerView mrecycle;
     private DatabaseReference muserdatabase,mref1,mref2;
@@ -36,7 +47,10 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
     GoogleMap mgooglemap;
     String uid;
     Double longi,lati;
-     DataSnapshot ds;
+    DataSnapshot ds;
+    private DrawerLayout mdrawer;
+    private ActionBarDrawerToggle mtoggle;
+    private NavigationView nav;
 
 
     @Override
@@ -50,6 +64,17 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
         mrecycle=(RecyclerView) findViewById(R.id.recycle);
         mrecycle.setHasFixedSize(true);
         mrecycle.setLayoutManager(new LinearLayoutManager(this));
+
+
+
+        nav=(NavigationView) findViewById(R.id.nav);
+        nav.setNavigationItemSelectedListener(this);
+        mdrawer=(DrawerLayout) findViewById(R.id.drawer_layout);
+        mtoggle=new ActionBarDrawerToggle(this,mdrawer,R.string.open,R.string.close);
+        mdrawer.addDrawerListener(mtoggle);
+        mtoggle.syncState();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
 
@@ -71,6 +96,16 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
 
 
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(mtoggle.onOptionsItemSelected(item)){
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     public String getuid(){
@@ -126,6 +161,53 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
 
     }
 
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id=item.getItemId();
+        if(id==R.id.tag){
+            startActivity(new Intent(demands.this,customermap.class));
+        }
+
+        if(id==R.id.search){
+            startActivity(new Intent(demands.this,search_product.class));
+        }
+        if(id==R.id.home){
+            startActivity(new Intent(demands.this,select.class));
+        }
+        if(id==R.id.log){
+            FirebaseAuth.getInstance().signOut();
+            stopService(new Intent(demands.this,serviceclass.class));
+            new AsyncTask<Void,Void,Void>()
+            {
+                @Override
+                protected Void doInBackground(Void... params)
+                {
+                    {
+                        try
+                        {
+                            FirebaseInstanceId.getInstance().deleteInstanceId();
+                        } catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                    return null;
+                }
+                @Override
+                protected void onPostExecute(Void result)
+                {
+                    //call your activity where you want to land after log out
+                }
+            }.execute();
+
+            startActivity(new Intent(demands.this,MainActivity.class));
+            finish();
+        }
+
+        mdrawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
 
     public  static class UserViewHolder extends RecyclerView.ViewHolder{
 
@@ -136,7 +218,7 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
         String category;
         Double longi,lati;
         demands d1;
-       DataSnapshot ds;
+        DataSnapshot ds;
         GoogleMap mgoogle;
         Marker m1;
 
@@ -144,25 +226,30 @@ public class demands extends AppCompatActivity implements OnMapReadyCallback {
             super(itemView);
             mview=itemView;
             locate=(TextView) mview.findViewById(R.id.t4);
-            d1=new demands();
+            d1= new demands();
 
-            locate.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
+           try {
+               locate.setOnClickListener(new View.OnClickListener() {
+                   @Override
+                   public void onClick(View view) {
 
-                    double lat = ds.child(key).child("l").child("0").getValue(double.class);
-                    double lng =ds.child(key).child("l").child("1").getValue(double.class);
-                    String r=Double.toString(lat);
-                    LatLng l1 = new LatLng(lat, lng);
-                    mgoogle.moveCamera(CameraUpdateFactory.newLatLng(l1));//camera moves with the user
-                    mgoogle.animateCamera(CameraUpdateFactory.zoomTo(16));
+                       double lat = ds.child(key).child("l").child("0").getValue(double.class);
+                       double lng = ds.child(key).child("l").child("1").getValue(double.class);
+                       String r = Double.toString(lat);
+                       LatLng l1 = new LatLng(lat, lng);
+                       mgoogle.moveCamera(CameraUpdateFactory.newLatLng(l1));//camera moves with the user
+                       mgoogle.animateCamera(CameraUpdateFactory.zoomTo(16));
 
 
-                        MarkerOptions opt = new MarkerOptions().title(category).position(new LatLng(lat, lng));
-                        m1 = mgoogle.addMarker(opt);
+                       MarkerOptions opt = new MarkerOptions().title(category).position(new LatLng(lat, lng));
+                       m1 = mgoogle.addMarker(opt);
 
-                }
-            });
+                   }
+               });
+           }
+           catch (Exception e){
+               Toast.makeText(ctx, "some error occured", Toast.LENGTH_SHORT).show();
+           }
 
         }
 

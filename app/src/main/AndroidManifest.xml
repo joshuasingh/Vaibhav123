@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+
     <permission
         android:name="com.example.joshuamsingh.afinally.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
@@ -25,7 +26,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,15 +43,24 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <activity android:name=".select" />
-        <activity android:name=".tag_info" />
-        <activity android:name=".search_product" />
-        <activity android:name=".demands" />
-        <activity android:name=".seller" />
-        <activity android:name=".represented" />
-        <activity android:name=".piechart" />
-        <activity android:name=".tag_a_store" />
-        <activity android:name=".store_info" />
+        <activity android:name=".select"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".tag_info"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".search_product"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".demands"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".seller"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".represented"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".piechart"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".tag_a_store"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".store_info"
+            android:screenOrientation="portrait"/>
 
         <service android:name=".Service.MyFirebaseServices">
             <intent-filter>
@@ -61,8 +72,14 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+       <service android:name=".serviceclass"/>
+        <activity android:name=".message"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".main1Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".RegisterActivity"
+            android:screenOrientation="portrait"></activity>
 
-        <activity android:name=".message"></activity>
     </application>
 
 </manifest>
